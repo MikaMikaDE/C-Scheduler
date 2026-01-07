@@ -17,11 +17,9 @@
 #include "processcontrol.h"
 #include "simruntime.h"
 
-//ALTERATION BY MIKA:
-//To compile and test on linux systems
-#if defined(__linux__)
-schedulingEvent_t sim_wait4UnblockedOrNew(pid_t *pPID);
-#endif
+//ALTERATION BY MIKA: 
+//was missing from simruntime.h -> that file explicitely asks not to be editied -> so here it is.
+schedulingEvent_t sim_wait4UnblockedOrNew(pid_t* pPID); 
 
 /* ----------------------------------------------------------------	*/
 /* Declarations of global variables visible only in this file 		  */
@@ -67,7 +65,7 @@ void coreLoop(void)
 				/* This must be extended for multiprogramming. */ 
 				/* Add Code for handling of started or unblocked processes here. 
 				/* For RR it is simply enqueing to the readylist, other schedulers may require more actions */
-				addReady(readyProcess);		// add this process to the ready list
+				addReady(readyProcess);
 				
 				/* Last command in the while loop is the following (must alway remain the last command in the loop) */
 				releaseEvent = sim_check4UnblockedOrNew(&readyProcess);	// check for further events, must stay in!
@@ -131,6 +129,9 @@ void coreLoop(void)
           exit(-1);		// terminate as simulation is not working correctly
           break;
 			}
+      //added (multiptogramming): needs to poll again, else this logs the same event over and over!
+      releaseEvent = sim_wait4UnblockedOrNew(&readyProcess); 
+
 		}
 	} while (!stimulusCompleted);
 }

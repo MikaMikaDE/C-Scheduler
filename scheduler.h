@@ -12,7 +12,7 @@
 #include "dispatcher.h"
 
 
-pid_t schedule(readyList_t readyList);
+pid_t schedule(readyList_t *readyList);
 /* the parameter readyList passes the data structure holding all runnable	*/
 /* processes, of which the function schedule() selects one to run next		*/
 /* returns a pointer to the next process to run								*/

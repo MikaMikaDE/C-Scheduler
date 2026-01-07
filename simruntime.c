@@ -17,7 +17,7 @@
 //ALTERATION BY MIKA: 
 //to compile and run on linux
 #if defined(__linux__)
-#include <limits.h>
+  #include <limits.h>
 #endif
 
 Boolean stimulusComplete = FALSE;		// stimulus file completely read ?

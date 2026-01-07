@@ -11,11 +11,11 @@
 #include "scheduler.h"
 #include "simruntime.h"
 
-#define SIM_MULTIPROGAMMING // if this directive is enabled, the simulation supports multiprogramming. 
-#define NO_RANDOM_SEED      // if this directive is enabled, the random number generator is seeded with zero
+#define SIM_MULTIPROGAMMING TRUE  // if this directive is enabled, the simulation supports multiprogramming. 
+#define NO_RANDOM_SEED            // if this directive is enabled, the random number generator is seeded with zero
 #define NUM_PROCESSES 20    // Number of possible concurrent processes 
-#define NO_PROCESS 0        // PID of zero is used to indicate that no matching process exists
-#define QUANTUM 0           // Maximum duration one process gets the CPU, zero indicates no preemption
+#define NO_PROCESS     0    // PID of zero is used to indicate that no matching process exists
+#define QUANTUM       50    // Maximum duration one process gets the CPU, zero indicates no preemption
 //
 #define PROCESS_FILENAME "processes.txt" // name of the file with process definitions
 
@@ -24,7 +24,7 @@
 /* ----------------------------------------------------------------	*/
 extern PCB_t          processTable[NUM_PROCESSES+1]; 	// the process table
 extern unsigned       systemTime; 	// the current system time (up time)
-extern readyList_t    readyList;	  // pointer to list of runnable processes
-extern blockedList_t  blockedList;	// pointer to blocked process
+extern readyList_t    *readyList;	  // pointer to queue of runnable processes
+extern blockedList_t  *blockedList;	// pointer to blocked process
 
 #endif  /* __GLOBALS__ */ 
