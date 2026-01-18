@@ -65,7 +65,7 @@ typedef struct blockedListElement_struct {
 typedef struct {
   blockedListElement_t elems[LIST_SIZE];
   size_t               count;
-} blockedList_t; // list of blockedListElement_t
+} blockedList_t; // queue of blockedListElement_t
 
 
 

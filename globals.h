@@ -15,7 +15,7 @@
 #define NO_RANDOM_SEED            // if this directive is enabled, the random number generator is seeded with zero
 #define NUM_PROCESSES 20    // Number of possible concurrent processes 
 #define NO_PROCESS     0    // PID of zero is used to indicate that no matching process exists
-#define QUANTUM        0    // Maximum duration one process gets the CPU, zero indicates no preemption
+#define QUANTUM       10    // Maximum duration one process gets the CPU, zero indicates no preemption
 //
 #define PROCESS_FILENAME "processes.txt" // name of the file with process definitions
 

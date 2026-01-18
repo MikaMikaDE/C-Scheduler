@@ -27,8 +27,7 @@ void logPidEvent(unsigned pid, schedulingEvent_t reason, char * message);
 /* the last scheduling event is also prepended								*/
 /* the linefeed is automatically appended									*/
 
-void logPidCompleteness(unsigned pid, unsigned done, unsigned length, 
-						char * message);
+void logPidCompleteness(unsigned pid);
 /* print the given  string to stdout and/or a log file 						*/
 /* The time stamp (systemTime) and the  PID are prepended automatically		*/
 /* the fraction of used CPU over process duratiuon is also prepended		*/

@@ -90,6 +90,8 @@ Boolean initBlockedList(void) {
 
 
 
+
+
 /* CAUTION: For simulation purposes the blocked list must comply with:			*/
 /*		- each entry has the information of the release time (IOready)			  */
 /*		  included for each process	(handled by the simulation)					      */
@@ -166,7 +168,7 @@ Boolean removeBlocked(pid_t pid) {
 /* returns a pointer to the first element of the blocked list	*/
 /* MUST be implemented for simulation purposes					      */			
 blockedListElement_t *headOfBlockedList() {
-	if (isBlockedListEmpty()) return NULL; // empty blocked list has no first element
+	if (isBlockedListEmpty()) return NO_PROCESS; // empty blocked list has no first element
   return &(blockedList->elems[0]); //list is always sorted on insert, so head is just 1st el
 }
 
@@ -267,7 +269,7 @@ Boolean removeReady(pid_t pid) {
 /*		- interface as given in the .h-file							                      */
 /*		- no process is added as "ready" before its start time has elapsed	  */
 readyListElement_t* headOfReadyList() {
-	if (isReadyListEmpty()) return NULL; // empty ready list has no first element
+	if (isReadyListEmpty()) return NO_PROCESS; // empty ready list has no first element
 	else return &readyList->elems[0];
 }
 
