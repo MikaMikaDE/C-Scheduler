@@ -34,4 +34,6 @@ void logPidCompleteness(unsigned pid);
 /* the linefeed is automatically appended									*/
 
 
+void logLists(readyList_t *ready, blockedList_t *block);
+
 #endif /* __LOG__ */

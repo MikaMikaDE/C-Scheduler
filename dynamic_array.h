@@ -20,9 +20,9 @@ typedef struct {                                                  \
 static name##_t* name##_init(void) {                              \
   name##_t *arr = malloc(sizeof *arr);                            \
   if (!arr) return NULL;                                          \
-  arr->count = 0;                                                 \
+  arr->count    = 0;                                              \
   arr->capacity = STARTING_CAPACITY;                              \
-  arr->elems = malloc(arr->capacity * sizeof(type));              \
+  arr->elems    = malloc(arr->capacity * sizeof(type));           \
   if (!arr->elems) { free(arr); return NULL; }                    \
   return arr;                                                     \
 }                                                                 \
@@ -49,12 +49,17 @@ static Boolean name##_push(name##_t *arr, type elem) {            \
                                                                   \
 /*Adds a new element to the end of the SET,*/                     \
 /*where equivalence is defined as having the same pid*/           \
-static Boolean name##_push_unique_pid(name##_t *arr, type elem) { \
+static Boolean name##_append_unique(name##_t *arr, type elem) {   \
   for (size_t i=0; i<arr->count; i++) {                           \
-     /*is already in list!*/                                      \
+     /*check if element is already present*/                      \
     if (arr->elems[i].pid == elem.pid) return TRUE;               \
   }                                                               \
-  return name##_push(arr, elem);                                  \
+  if (arr->count >= arr->capacity) {                              \
+    /*Not enough space - need to realloc*/                        \
+    if (!name##_realloc(arr)) return FALSE;                       \
+  }                                                               \
+  arr->elems[arr->count++] = elem;                                \
+  return TRUE;                                                    \
 }                                                                 \
                                                                   \
                                                                   \

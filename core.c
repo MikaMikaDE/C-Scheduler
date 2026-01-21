@@ -16,8 +16,6 @@
 #include "scheduler.h"
 #include "processcontrol.h"
 #include "simruntime.h"
-
-//ALTERATION BY MIKA: 
 //was missing from simruntime.h -> that file explicitely asks not to be editied -> so here it is.
 schedulingEvent_t sim_wait4UnblockedOrNew(pid_t* pPID); 
 
@@ -54,6 +52,7 @@ void coreLoop(void) {
 	schedulingEvent_t     releaseEvent    = none;	// event that occured while process was running
 
 	do {	// loop until stimulus is complete
+    logLists(readyList, blockedList);
 		currentProcess = schedule(readyList);	                                    // select and run a process
 		if (currentProcess!= NO_PROCESS){		                                      // schedulable process exists, given by its PID
 			systemTime=systemTime  +  SCHEDULING_DURATION; 

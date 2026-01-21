@@ -101,7 +101,7 @@ Boolean addBlocked(pid_t pid, unsigned blockDuration) {
     .pid     = pid, 
     .IOready = systemTime + blockDuration
   };
-  if (!blockedList_push_unique_pid(blockedList, newElem)) return FALSE; //allocation failure
+  if (!blockedList_append_unique(blockedList, newElem)) return FALSE; //allocation failure
   processTable[pid].status = blocked;
   return TRUE;
 }
@@ -159,7 +159,7 @@ Boolean addReady(pid_t pid) {
   if (!processTable[pid].valid          ) return FALSE; //invalid procsees
 
   readyListElement_t newElem= {.pid=pid };
-  if(!readyList_push_unique_pid(readyList, newElem)) return FALSE; //allocation failure
+  if(!readyList_append_unique(readyList, newElem)) return FALSE; //allocation failure
   processTable[pid].status = ready; // set state = ready
 	return TRUE;
 }
@@ -176,12 +176,9 @@ Boolean removeReady(pid_t pid) {
 
 }
 
-
-
 /* returns a pointer to the first element of the ready list				          */
 readyListElement_t* headOfReadyList() {
-	if (isReadyListEmpty()) return NO_PROCESS; // empty ready list has no first element
-	else return &readyList->elems[0];
+	return (isReadyListEmpty()) ? NO_PROCESS : &readyList->elems[0]; // empty ready list has no first element
 }
 
 
