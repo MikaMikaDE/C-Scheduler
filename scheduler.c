@@ -26,15 +26,10 @@ void logReadyAndBlockedLists(readyList_t *readyList);
 pid_t schedule(readyList_t *readyList) {
   logReadyAndBlockedLists(readyList);
   if (isReadyListEmpty()) return NO_PROCESS;
-
-
   
   //dequeue from readyList
   pid_t nextPid = headOfReadyList()->pid;
   removeReady(nextPid);
-
-  //start Quantumn 
-  //Assign CPU
   return nextPid;
 }
 /* ----------------------------------------------------------------- */
@@ -43,7 +38,9 @@ pid_t schedule(readyList_t *readyList) {
 
 
 
-#define LOG_LIST(NAME, LIST) do {                         \
+#define LOG_LIST(NAME, LIST) do {                                     \
+/*Laut der Aufgabe sind printfs ohne newline verboten*/               \
+/* aber in diesem Fall ergibt es Sinn, um die Listen besser zu sehen*/\
   printf("  " NAME ": [");                                \
   for (size_t i = 0; i < (LIST)->count; i++) {            \
     if (i > 0) printf(", ");                              \

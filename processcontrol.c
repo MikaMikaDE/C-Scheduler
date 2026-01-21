@@ -9,6 +9,7 @@
 #include "dispatcher.h"
 #include "processcontrol.h"
 #include "simruntime.h"
+#include "dynamic_array.h"
 
 /* ----------------------------------------------------------------	      */
 /* Declare global variables according to definition in globals.h	        */
@@ -78,14 +79,9 @@ Boolean deleteProcess(pid_t pid) {
 /*		  included for each process												                      */
 /*		- The blocked list is sorted by not decreasing release times (IOready)	*/
 /*			(i.e. first process to become unblocked is always head of the list	  */
-/* xxxx This function is a stub with reduced functionality, it must be   xxxx */
-/* xxxx extended to enable full functionality of the operating system    xxxx */
-/* xxxx A global variable is used to store blocked process in batch      xxxx */
-/* xxxx processing. A blocked list needs to be implemented 		           xxxx */
 Boolean initBlockedList(void) {
-  blockedList = malloc(sizeof(*blockedList));
-	blockedList->count = 0;
-	return TRUE;
+  blockedList = blockedList_init();
+	return blockedList ? TRUE: FALSE;
 }
 
 
@@ -98,33 +94,15 @@ Boolean initBlockedList(void) {
 /*        calculated as the systemTime + blockDuration						          */
 /*		- The blocked list is sorted by not decreasing release times (IOready)*/
 /*			(i.e. first process to become unblocked is always head of the list	*/
-
-/* xxxx This function is a stub with reduced functionality, it must be xxxx */
-/* xxxx extended to enable full functionality of the operating system  xxxx */
-/* xxxx A global variable is used to store blocked process in batch    xxxx */
-/* xxxx processing. A blocked list needs to be implemented 		         xxxx */
 /* retuns FALSE on error and TRUE on success								                */
 Boolean addBlocked(pid_t pid, unsigned blockDuration) {
   if (pid == NO_PROCESS) return FALSE;
-  //list is full
-  if (blockedList->count >= NUM_PROCESSES) return FALSE;
-  size_t i = blockedList->count;
-  const unsigned IOready = systemTime + blockDuration;
-
-  //sort array 
-  while(i>0 && blockedList->elems[i-1].IOready > IOready) {
-    blockedList->elems[i] = blockedList->elems[i-1];
-    i--;
-  }
-  //add new blocked element
-  blockedList->elems[i].pid     = pid;
-  blockedList->elems[i].IOready = IOready;
-  
-  // set state=blocked
-  processTable[pid].status  = blocked;
-
-  //update size of list
-  blockedList->count++;
+  blockedListElement_t newElem = {
+    .pid     = pid, 
+    .IOready = systemTime + blockDuration
+  };
+  if (!blockedList_push_unique_pid(blockedList, newElem)) return FALSE; //allocation failure
+  processTable[pid].status = blocked;
   return TRUE;
 }
 
@@ -132,7 +110,7 @@ Boolean addBlocked(pid_t pid, unsigned blockDuration) {
 /* predicate returning TRUE if any blocked process exists, FALSE if no		  */
 /* blocked processes exist													                        */
 Boolean isBlockedListEmpty(void) {
-	return (blockedList->count == 0); //blockedList stores its size
+	return blockedList_isEmpty(blockedList); //blockedList stores its size
 }
 
 
@@ -143,25 +121,7 @@ Boolean isBlockedListEmpty(void) {
 /* xxxx A global variable is used to store blocked process in batch    xxxx */
 /* xxxx processing. A blocked list needs to be implemented 		         xxxx */
 Boolean removeBlocked(pid_t pid) {
-  if (isBlockedListEmpty()) return FALSE; //elem didnt exist
-  blockedListElement_t *current;
-  size_t count = blockedList->count;
-  size_t idx   = 0;
-
-  // find index
-  while (idx<count && blockedList->elems[idx].pid != pid) idx++;
-  if (idx == count) return FALSE; // not found
-
-  // shift left to fill the gap
-  for (size_t i=idx+1; i<count; i++) {
-    blockedList->elems[i-1] = blockedList->elems[i];
-  }
-
-  blockedList->elems[count - 1].pid = NO_PROCESS; // forget the blocked process
-  blockedList->elems[count - 1].IOready = 0;
-  blockedList->count--;
-
-	return TRUE;
+  return blockedList_remove_by_pid(blockedList, pid);
 }
 
 
@@ -184,90 +144,41 @@ blockedListElement_t *headOfBlockedList() {
 /* Initialise the ready process control data structure						          */
 /* (no ready processes exist at initialisation time of the os)				      */
 /* retuns FALSE on error and TRUE on success								                */
-/* xxxx This function is a stub with reduced functionality, it must be xxxx */
-/* xxxx extended to enable full functionality of the operating system  xxxx */
-/* xxxx A global variable is used to store the ready process in        xxxx */
-/* xxxx batch processing. A ready list needs to be implemented 		     xxxx */
 Boolean initReadyList(void) {
-  readyList = malloc(sizeof(*readyList));
-	readyList->count = 0;
-	return TRUE;
+  readyList = readyList_init();
+  return readyList ? TRUE : FALSE;
 }
 
+
+
 /* retuns FALSE on error and TRUE on success								                */
-/* CAUTION: For simulation purposes the ready list must comply with:        */
-/*		- interface as given in the .h-file							                      */
-/*		- no process is added as "ready" before its start time has elapsed	  */
-/* xxxx This function is a stub with reduced functionality, it must be xxxx */
-/* xxxx extended to enable full functionality of the operating system  xxxx */
-/* xxxx A global variable is used to store the only ready process in   xxxx */
-/* xxxx batch processing. A blocked list needs to be implemented 	     xxxx */
 // add this process to the ready list
-
 Boolean addReady(pid_t pid) {
-  int i;
-  size_t count = readyList->count;
-  if (pid   == NO_PROCESS     ) return FALSE; //not a processs
-  if (count >= NUM_PROCESSES  ) return FALSE; //list is full
-  if (!processTable[pid].valid) return FALSE; //invalid procsees
+  if (pid   == NO_PROCESS               ) return FALSE; //not a processs
+  if (readyList->count >= NUM_PROCESSES ) return FALSE; //list is full
+  if (!processTable[pid].valid          ) return FALSE; //invalid procsees
 
-  for (i=0; i<count; i++) {
-    if (readyList->elems[i].pid == pid) return TRUE; //is already in list!
-  }
-
+  readyListElement_t newElem= {.pid=pid };
+  if(!readyList_push_unique_pid(readyList, newElem)) return FALSE; //allocation failure
   processTable[pid].status = ready; // set state = ready
-  readyList->elems[i].pid  = pid;   //add new ready element
-  readyList->count++;               //update size of list
-
 	return TRUE;
 }
 
 /* predicate returning TRUE if any ready process exists, FALSE if no		    */
 /* ready processes exist													                          */
 Boolean isReadyListEmpty(void) {
-	return (readyList->count == 0);
+	return readyList_isEmpty(readyList);
 }
 
 /* retuns FALSE on error and TRUE on success								                */
-/* CAUTION: For simulation purposes the ready list must comply with:        */
-/*		- interface as given in the .h-file							                      */
-/*		- no process is added as "ready" before its start time has elapsed	  */
-/* xxxx This function is a stub with reduced functionality, it must be xxxx */
-/* xxxx extended to enable full functionality of the operating system  xxxx */
-/* xxxx A global variable is used to store ready process in batch      xxxx */
-/* xxxx processing. A ready list needs to be implemented 		           xxxx */
 Boolean removeReady(pid_t pid) {
-  if (isReadyListEmpty()) return FALSE; //elem didnt exist
-  
-  readyListElement_t *current;
-  size_t count = readyList->count;
-  size_t idx   = 0;
+  return readyList_remove_by_pid(readyList, pid);
 
-  // find index
-  while (idx < count && readyList->elems[idx].pid != pid) idx++;
-  if (idx == count) return FALSE; // not found
-
-  // shift left to fill the gap
-  for (size_t i=idx+1; i<count; i++) {
-    readyList->elems[i-1] = readyList->elems[i];
-  }
-
-  readyList->elems[count - 1].pid = NO_PROCESS;
-  readyList->count--;
-
-	return TRUE;
 }
-
-
-
 
 
 
 /* returns a pointer to the first element of the ready list				          */
-/* MUST be implemented for simulation purposes								              */
-/* CAUTION: For simulation purposes the ready list must comply with:        */
-/*		- interface as given in the .h-file							                      */
-/*		- no process is added as "ready" before its start time has elapsed	  */
 readyListElement_t* headOfReadyList() {
 	if (isReadyListEmpty()) return NO_PROCESS; // empty ready list has no first element
 	else return &readyList->elems[0];

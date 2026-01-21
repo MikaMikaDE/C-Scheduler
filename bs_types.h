@@ -3,7 +3,7 @@
 /* ---------------------------------------------------------------------------- */
 #ifndef __BS_TYPES__
 #define __BS_TYPES__
-
+#include"dynamic_array.h"
 
 /* ---------------------------------------------------------------------------- */
 // process id data type
@@ -44,12 +44,8 @@ typedef struct sim_info_struct {
 typedef struct readyListElement_struct {
 	pid_t	pid;
 } readyListElement_t;
-
-typedef struct readyList_struct { 
-  readyListElement_t elems[LIST_SIZE];
-  size_t             count;
-} readyList_t; // queue of readyListElement_t
-
+//macro from dynamic_array. Provides readyList_t
+DYNAMIC_ARRAY(readyList, readyListElement_t)
 
 
 
@@ -61,11 +57,8 @@ typedef struct blockedListElement_struct {
 	pid_t		 pid;
 	unsigned IOready;
 } blockedListElement_t;
-
-typedef struct {
-  blockedListElement_t elems[LIST_SIZE];
-  size_t               count;
-} blockedList_t; // queue of blockedListElement_t
+//macro from dynamic_array. Provides blockedList_t
+DYNAMIC_ARRAY(blockedList, blockedListElement_t)
 
 
 
