@@ -96,12 +96,29 @@ Boolean initBlockedList(void) {
 /*			(i.e. first process to become unblocked is always head of the list	*/
 /* retuns FALSE on error and TRUE on success								                */
 Boolean addBlocked(pid_t pid, unsigned blockDuration) {
-  if (pid == NO_PROCESS) return FALSE;
+  size_t i = 0;
+  size_t j;
   blockedListElement_t newElem = {
     .pid     = pid, 
     .IOready = systemTime + blockDuration
   };
-  if (!blockedList_append_unique(blockedList, newElem)) return FALSE; //allocation failure
+  if (pid == NO_PROCESS) return FALSE;
+ 
+  if (blockedList->count >= blockedList->capacity) {/*Not enough space - need to realloc*/
+    if (!blockedList_realloc(blockedList)) return FALSE;
+  }
+
+  // find insertion index - where the next smallest blockDuration is
+  while (i < blockedList->count && blockedList->elems[i].IOready <= newElem.IOready) {
+    i++;
+  }
+  // shift right from that index
+  for (j=blockedList->count; j>i; j--) {
+    blockedList->elems[j] = blockedList->elems[j - 1];
+  }
+  //insert at that index
+  blockedList->count++;
+  blockedList->elems[i]    = newElem;
   processTable[pid].status = blocked;
   return TRUE;
 }
@@ -154,12 +171,11 @@ Boolean initReadyList(void) {
 /* retuns FALSE on error and TRUE on success								                */
 // add this process to the ready list
 Boolean addReady(pid_t pid) {
-  if (pid   == NO_PROCESS               ) return FALSE; //not a processs
+  readyListElement_t newElem= {.pid=pid };
+  if (pid == NO_PROCESS                 ) return FALSE; //not a processs
   if (readyList->count >= NUM_PROCESSES ) return FALSE; //list is full
   if (!processTable[pid].valid          ) return FALSE; //invalid procsees
-
-  readyListElement_t newElem= {.pid=pid };
-  if(!readyList_append_unique(readyList, newElem)) return FALSE; //allocation failure
+  if(!readyList_push(readyList, newElem)) return FALSE; //allocation failure
   processTable[pid].status = ready; // set state = ready
 	return TRUE;
 }

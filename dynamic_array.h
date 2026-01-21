@@ -47,20 +47,6 @@ static Boolean name##_push(name##_t *arr, type elem) {            \
   return TRUE;                                                    \
 }                                                                 \
                                                                   \
-/*Adds a new element to the end of the SET,*/                     \
-/*where equivalence is defined as having the same pid*/           \
-static Boolean name##_append_unique(name##_t *arr, type elem) {   \
-  for (size_t i=0; i<arr->count; i++) {                           \
-     /*check if element is already present*/                      \
-    if (arr->elems[i].pid == elem.pid) return TRUE;               \
-  }                                                               \
-  if (arr->count >= arr->capacity) {                              \
-    /*Not enough space - need to realloc*/                        \
-    if (!name##_realloc(arr)) return FALSE;                       \
-  }                                                               \
-  arr->elems[arr->count++] = elem;                                \
-  return TRUE;                                                    \
-}                                                                 \
                                                                   \
                                                                   \
 /*Removes element with a given pid*/                              \
@@ -89,4 +75,6 @@ static void name##_free(name##_t *arr) {                          \
   free(arr->elems);                                               \
   free(arr);                                                      \
 }
+ 
+// assumes element type has fields: pid, IOready
 
