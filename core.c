@@ -27,9 +27,9 @@ PCB_t process;		// the only user process used for batch and FCFS
 /* ---------------------------------------------------------------- */
 /*                Local Helper Funcion definition                   */
 /* ---------------------------------------------------------------- */
-static void  handleReleaseEventWhileBusy(schedulingEvent_t releaseEvent,    pid_t readyProcess  );
-static pid_t handleSchedulingEvent      (schedulingEvent_t schedulingEvent, pid_t currentProcess);
-static bool  handleReleaseEventWhileIdle(schedulingEvent_t releaseEvent,    pid_t readyProcess  );
+static void    handleReleaseEventWhileBusy(schedulingEvent_t releaseEvent,    pid_t readyProcess  );
+static pid_t   handleSchedulingEvent      (schedulingEvent_t schedulingEvent, pid_t currentProcess);
+static Boolean handleReleaseEventWhileIdle(schedulingEvent_t releaseEvent,    pid_t readyProcess  );
 
 
 /* ---------------------------------------------------------------- */
@@ -54,8 +54,8 @@ void coreLoop(void) {
 	do {	// loop until stimulus is complete
     logLists(readyList, blockedList);
 		currentProcess = schedule(readyList);	                                    // select and run a process
-		if (currentProcess!= NO_PROCESS){		                                      // schedulable process exists, given by its PID
-			systemTime=systemTime  +  SCHEDULING_DURATION; 
+		if (currentProcess != NO_PROCESS){		                                    // schedulable process exists, given by its PID
+			systemTime = systemTime + SCHEDULING_DURATION; 
 			logPid(currentProcess,"Process (re-)started"); 
 			processTable[currentProcess].status = running;
 			schedulingEvent = sim_runProcess(currentProcess, QUANTUM);              // run the processing the simulation, get info what happens next
@@ -83,13 +83,13 @@ void coreLoop(void) {
 //Handles new/unblocked processes while CPU is running
 static void handleReleaseEventWhileBusy(schedulingEvent_t releaseEvent, pid_t readyProcess) {
   switch (releaseEvent) {
-    case unblocked:
+    case unblocked://process finished IO
       removeBlocked(readyProcess);
       addReady(readyProcess);
       logPid(readyProcess, "IO completed, process unblocked and switched to ready state");
       return;
 
-    case started:
+    case started://process just started
       addReady(readyProcess);
       logPid(readyProcess, "New process initialised and now ready");
       return;
@@ -104,19 +104,19 @@ static void handleReleaseEventWhileBusy(schedulingEvent_t releaseEvent, pid_t re
 //returns current process (which can modify it in the case the process was completed)
 static pid_t handleSchedulingEvent(schedulingEvent_t schedulingEvent, pid_t currentProcess) {
   switch (schedulingEvent) {
-    case completed: 
-      logPid(currentProcess, "Process complete and terminated");
-      deleteProcess(currentProcess); 
-      return NO_PROCESS; 
-    
-    case io:	// block process for time of IO
-      addBlocked(currentProcess, sim_setIOBlockTime()); 
-      return currentProcess; 
-
     case quantumOver: // only logging needed
       logPidCompleteness(currentProcess);
       addReady(currentProcess); // add this process to the ready list
       return currentProcess; 
+
+    case io:	// block process for time of IO
+      addBlocked(currentProcess, sim_setIOBlockTime()); 
+      return currentProcess; 
+
+    case completed: //process finished -> terminate it
+      logPid(currentProcess, "Process complete and terminated");
+      deleteProcess(currentProcess); 
+      return NO_PROCESS;
     
     default: break; 
   }
@@ -125,21 +125,24 @@ static pid_t handleSchedulingEvent(schedulingEvent_t schedulingEvent, pid_t curr
 
 
 //Handles new/unblocked processes while CPU is idle
-//returns whether the simulation is over (TRUE) or should continue (FALSE)
-static bool handleReleaseEventWhileIdle(schedulingEvent_t releaseEvent, pid_t readyProcess) {
+//returns TRUE if simulation is over else FALSE
+static Boolean handleReleaseEventWhileIdle(schedulingEvent_t releaseEvent, pid_t readyProcess) {
   switch (releaseEvent) {
     case none:	// there are neither blocked processes nor further processes in the stimulus
       logGeneric("Stimulus completed");
       return TRUE; 
+    
     case unblocked:
       removeBlocked(readyProcess); // remove from blocked pool
       addReady(readyProcess);		   // add this process to the ready list
       logPid(readyProcess, "IO completed, process unblocked and switched to ready state");
       return FALSE;
+    
     case started: 
       addReady(readyProcess);		// add this process to the ready list
       logPid(readyProcess, "New process initialised and now ready"); 
       return FALSE;
+    
     default: // any other return value must be an error
       logGeneric("ERROR in Simulation handling unblocked/new processes when IDLE");
       exit(-1);		// terminate as simulation is not working correctly

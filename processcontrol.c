@@ -145,9 +145,11 @@ Boolean removeBlocked(pid_t pid) {
 /* returns a pointer to the first element of the blocked list	*/
 /* MUST be implemented for simulation purposes					      */			
 blockedListElement_t *headOfBlockedList() {
-	if (isBlockedListEmpty()) return NO_PROCESS; // empty blocked list has no first element
-  return &(blockedList->elems[0]); //list is always sorted on insert, so head is just 1st el
+  //list is always sorted on insert, so head is just 1st el
+	return (isBlockedListEmpty()) ? NO_PROCESS: &(blockedList->elems[0]);
+
 }
+
 
 
 /* ----------------------------------------------------------------         */
@@ -172,9 +174,8 @@ Boolean initReadyList(void) {
 // add this process to the ready list
 Boolean addReady(pid_t pid) {
   readyListElement_t newElem= {.pid=pid };
-  if (pid == NO_PROCESS                 ) return FALSE; //not a processs
-  if (readyList->count >= NUM_PROCESSES ) return FALSE; //list is full
-  if (!processTable[pid].valid          ) return FALSE; //invalid procsees
+  if (pid == NO_PROCESS                 ) return FALSE; //not a   processs
+  if (!processTable[pid].valid          ) return FALSE; //invalid process
   if(!readyList_push(readyList, newElem)) return FALSE; //allocation failure
   processTable[pid].status = ready; // set state = ready
 	return TRUE;
